@@ -1,0 +1,15 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Git Push to Both Remotes",
+      "type": "shell",
+      "command": "git add . ; git commit -m 'Update project files' ; git push origin master:main ; git push system master:main",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}
