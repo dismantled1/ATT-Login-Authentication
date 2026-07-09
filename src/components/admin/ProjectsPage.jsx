@@ -20,6 +20,7 @@ function ProjectsPage({ users, allUsers, projects, currentUser, onSaveProject, o
   const [selectedProjectId, setSelectedProjectId] = useState(projects[0]?.id || '');
   const [draftProject, setDraftProject] = useState(null);
   const [query, setQuery] = useState('');
+  const [memberSearch, setMemberSearch] = useState('');
   const [justJumped, setJustJumped] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const editorPanelRef = useRef(null);
@@ -27,9 +28,22 @@ function ProjectsPage({ users, allUsers, projects, currentUser, onSaveProject, o
   const selectedProject = projects.find((project) => project.id === selectedProjectId) || projects[0];
   const activeDraft = draftProject || selectedProject || emptyProject;
   const isCreating = Boolean(draftProject && !draftProject.id);
-  const tenantAdmins = allUsers.filter((user) => user.role === 'tenant_admin');
-  const scopedManagers = users.filter((user) => user.role === 'manager');
-  const scopedEditableUsers = users.filter((user) => user.role === 'manager' || user.role === 'user');
+
+  // Feature 8: Filter suspended users from all project assignment lists
+  const activeUsers = allUsers.filter((u) => (u.status || 'active') !== 'suspended');
+  const activeUsersInScope = users.filter((u) => (u.status || 'active') !== 'suspended');
+
+  const tenantAdmins = activeUsers.filter((user) => user.role === 'tenant_admin');
+  const scopedManagers = activeUsersInScope.filter((user) => user.role === 'manager');
+
+  // Feature 2: Searchable, filtered member list
+  const memberNeedle = memberSearch.trim().toLowerCase();
+  const scopedEditableUsers = activeUsersInScope.filter((user) =>
+    (user.role === 'manager' || user.role === 'user') &&
+    (!memberNeedle || [user.name, user.email, user.uid, user.department || '', user.employeeId || ''].some(
+      (v) => String(v).toLowerCase().includes(memberNeedle)
+    ))
+  );
 
   const filteredProjects = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -221,11 +235,22 @@ function ProjectsPage({ users, allUsers, projects, currentUser, onSaveProject, o
           <label>Status<select value={activeDraft.status || 'Planning'} onChange={(event) => updateDraft('status', event.target.value)}><option>Planning</option><option>In Progress</option><option>Verifying</option><option>Completed</option></select></label>
           <label>Priority<select value={activeDraft.priority || 'Medium'} onChange={(event) => updateDraft('priority', event.target.value)}><option>Low</option><option>Medium</option><option>High</option></select></label>
           <label>Tenant Admin<select value={activeDraft.tenantAdminUid || ''} disabled={currentUser.role === 'tenant_admin'} onChange={(event) => updateDraft('tenantAdminUid', event.target.value)}><option value="">Unassigned</option>{tenantAdmins.map((user) => <option key={user.uid} value={user.uid}>{user.name}</option>)}</select></label>
-          <label>Transition Manager<select value={activeDraft.transitionManagerUid || ''} onChange={(event) => updateDraft('transitionManagerUid', event.target.value)}><option value="">Unassigned</option>{scopedManagers.map((user) => <option key={user.uid} value={user.uid}>{user.name}</option>)}</select></label>
+          <label>Transition Manager<select value={activeDraft.transitionManagerUid || ''} onChange={(event) => updateDraft('transitionManagerUid', event.target.value)}><option value="">Unassigned</option>{scopedManagers.map((user) => <option key={user.uid} value={user.uid}>{user.name} ({user.email})</option>)}</select></label>
         </div>
 
         <div className="member-picker">
-          <h4>Project Users</h4>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <h4>Project Users <small style={{ fontWeight: 400, color: 'var(--ink-dim)', fontSize: 12 }}>Active only</small></h4>
+            <div className="search-box" style={{ maxWidth: 240, minHeight: 34 }}>
+              <i className="ti ti-search"></i>
+              <input
+                value={memberSearch}
+                onChange={(e) => setMemberSearch(e.target.value)}
+                placeholder="Search by name, email, ID..."
+                style={{ fontSize: 12 }}
+              />
+            </div>
+          </div>
           <div>
             {scopedEditableUsers.map((user) => {
               const checked = activeDraft.memberUids?.includes(user.uid) || activeDraft.transitionManagerUid === user.uid;

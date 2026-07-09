@@ -30,6 +30,8 @@ function App() {
   const [users, setUsers] = useState(loadUserCatalog);
   const [projects, setProjects] = useState(loadProjectCatalog);
   const [auditLog, setAuditLog] = useState(() => readStored('att_audit_log', DEFAULT_AUDIT_LOG));
+  const [permissionRequests, setPermissionRequests] = useState([]);
+  const [tenantRequests, setTenantRequests] = useState([]);
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = sessionStorage.getItem('att_current_user');
@@ -59,6 +61,11 @@ function App() {
   useEffect(() => {
     localStorage.setItem('att_audit_log', JSON.stringify(auditLog));
   }, [auditLog]);
+
+  useEffect(() => {
+    localStorage.removeItem('att_permission_requests');
+    localStorage.removeItem('att_tenant_requests');
+  }, []);
 
   useEffect(() => {
     if (currentUser) {
@@ -136,7 +143,7 @@ function App() {
     };
   }, [currentUser]);
 
-  const createUser = async ({ name, uid, role, password, projectIds, activeDuration }) => {
+  const createUser = async ({ name, uid, role, password, projectIds, activeDuration, email }) => {
     if (users.some((user) => user.uid === uid)) {
       showToast('User ID already exists');
       return false;
@@ -161,7 +168,7 @@ function App() {
       uid,
       name,
       role,
-      email: `${uid}@att.com`,
+      email: email || `${uid}@att.com`,
       created: new Date().toISOString().slice(0, 10),
       tenantId: role === 'super_admin' ? 'all' : firstProject?.tenantId || currentUser?.tenantId || 'tenant-unassigned',
       projectIds: role === 'super_admin' ? [] : allowedProjectIds,
@@ -216,8 +223,9 @@ function App() {
     addAuditLog('identity_revoked', `${currentUser.uid} revoked ${uid}`, 'granted');
   };
 
-  const updateUser = ({ uid, name, role, projectIds }) => {
+  const updateUser = ({ uid, name, role, projectIds, email, department, designation, phone, employeeId, status, expiryDate, password }) => {
     const targetUser = users.find((user) => user.uid === uid);
+    const editingUser = { email, department, designation, phone, employeeId, status, expiryDate, password };
     if (!targetUser) return false;
 
     if (targetUser.role === 'super_admin') {
@@ -250,6 +258,14 @@ function App() {
       ...targetUser,
       name: name.trim(),
       role,
+      email: editingUser.email || targetUser.email,
+      department: editingUser.department || targetUser.department,
+      designation: editingUser.designation || targetUser.designation,
+      phone: editingUser.phone || targetUser.phone,
+      employeeId: editingUser.employeeId || targetUser.employeeId,
+      status: editingUser.status || targetUser.status,
+      expiryDate: editingUser.expiryDate || targetUser.expiryDate,
+      ...(editingUser.password ? { pw: editingUser.password } : {}),
       tenantId: role === 'super_admin' ? 'all' : firstProject?.tenantId || targetUser.tenantId,
       projectIds: role === 'super_admin' ? [] : allowedProjectIds
     };
@@ -436,6 +452,49 @@ function App() {
     addAuditLog('user_promoted', `${currentUser.uid} promoted ${uid} to ${newRole}`, 'granted');
   };
 
+  // Feature 5 & Edit: Renew Access
+  const renewAccess = (uid, days) => {
+    const target = users.find((u) => u.uid === uid);
+    if (!target) return;
+    if (uid !== currentUser?.uid && isTenantAdmin && !scopedUsers.some((u) => u.uid === uid)) {
+      showToast('User is outside your scope');
+      return;
+    }
+    const base = target.expiryDate && new Date(target.expiryDate) > new Date()
+      ? new Date(target.expiryDate)
+      : new Date();
+    base.setDate(base.getDate() + days);
+    const newExpiry = base.toISOString().slice(0, 10);
+    setUsers((prev) => prev.map((u) => u.uid === uid ? { ...u, expiryDate: newExpiry } : u));
+    showToast(`Access renewed until ${newExpiry}`);
+    addAuditLog('access_renewed', `${currentUser.uid} renewed ${uid} by ${days} days → ${newExpiry}`, 'granted');
+  };
+
+  // Feature 4: Update own account (self-service)
+  const updateMyAccount = (uid, newDetails) => {
+    const targetUser = users.find((u) => u.uid === uid);
+    if (!targetUser) return false;
+    const now = new Date().toISOString().slice(0, 10);
+    const updatedUser = {
+      ...targetUser,
+      phone: newDetails.phone !== undefined ? newDetails.phone : targetUser.phone,
+      email: newDetails.email !== undefined ? newDetails.email : targetUser.email,
+      address: newDetails.address !== undefined ? newDetails.address : targetUser.address,
+    };
+    if (newDetails.password) {
+      updatedUser.pw = newDetails.password;
+      updatedUser.lastPasswordChangeDate = now;
+    }
+    setUsers((prev) => prev.map((u) => u.uid === uid ? updatedUser : u));
+    // Keep currentUser in sync
+    if (uid === currentUser?.uid) {
+      setCurrentUser((prev) => withResolvedRole({ ...prev, ...updatedUser }));
+    }
+    addAuditLog('account_updated', `${uid} updated their own account details`, 'granted');
+    showToast('Account details updated successfully');
+    return true;
+  };
+
   return (
     <div className="App">
       {!currentUser ? (
@@ -507,6 +566,8 @@ function App() {
                 onSuspendUser={suspendUser}
                 onResumeUser={resumeUser}
                 onPromoteUser={promoteUser}
+                onRenewAccess={renewAccess}
+                onUpdateMyAccount={updateMyAccount}
               />
             ) : (
               <UserView
@@ -514,6 +575,8 @@ function App() {
                 users={users}
                 projects={scopedProjects}
                 onToggleTouchpoint={updateProjectTouchpoint}
+                onUpdateMyAccount={updateMyAccount}
+                auditLog={auditLog}
               />
             )}
           </div>

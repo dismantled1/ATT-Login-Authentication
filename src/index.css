@@ -2640,3 +2640,231 @@ tr:last-child td {
   }
 
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   FEATURES: EXPIRY BADGES, SIDEBAR BADGES, STAT ICONS,
+             MY ACCOUNT, PERMISSION REQUESTS, QUICK ACTIONS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Expiry badges — Feature 4 */
+.expiry-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  vertical-align: middle;
+}
+.expiry-amber { background: rgba(217, 119, 6, 0.12); color: #b45309; }
+.expiry-orange { background: rgba(234, 88, 12, 0.12); color: #c2410c; }
+.expiry-red { background: rgba(212, 0, 31, 0.12); color: var(--red); }
+
+/* Sidebar notification badges */
+.sidebar-badge {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 0 5px;
+}
+.sidebar-badge.red { background: rgba(212, 0, 31, 0.15); color: var(--red); }
+.sidebar-badge.amber { background: rgba(217, 119, 6, 0.15); color: #b45309; }
+
+/* Stat card enhancements */
+.stat-card { position: relative; }
+.stat-icon {
+  font-size: 18px;
+  margin-bottom: 6px;
+  color: var(--ink-dim);
+}
+.stat-icon.green { color: var(--green); }
+.stat-icon.amber { color: #b45309; }
+.stat-icon.red   { color: var(--red); }
+.stat-action {
+  position: absolute;
+  bottom: 14px;
+  right: 16px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-dim);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.stat-action:hover { color: var(--navy); }
+.alert-card { border-left: 3px solid var(--red); }
+
+/* Quick Actions tile grid */
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+  padding: 22px;
+}
+.quick-action-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 88px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.quick-action-tile i { font-size: 22px; color: var(--navy); }
+.quick-action-tile:hover {
+  border-color: var(--navy);
+  background: rgba(11, 31, 58, 0.03);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* My Account page */
+.my-account-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 20px;
+  padding: 0 32px 32px;
+}
+.my-account-profile {
+  grid-column: 1 / -1;
+}
+.profile-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.profile-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--navy) 0%, #1e3a5f 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Racing Sans One', sans-serif;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+.profile-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0;
+  padding: 0 4px 8px;
+}
+.profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.profile-field:last-child { border-bottom: 0; }
+.profile-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-dim);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.profile-label i { font-size: 12px; }
+.password-placeholder-card .password-placeholder-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 32px 22px;
+  text-align: center;
+}
+.password-placeholder-icon { font-size: 36px; color: var(--ink-faint); }
+.password-placeholder-body p { font-size: 13px; color: var(--ink-dim); }
+
+/* Account project list */
+.account-project-list { padding: 10px 18px 18px; display: flex; flex-direction: column; gap: 10px; }
+.account-project-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  transition: background 0.15s;
+}
+.account-project-row:hover { background: var(--surface-soft); }
+.account-project-row strong { font-size: 13px; display: block; }
+.account-project-row small { color: var(--ink-dim); font-size: 11px; }
+
+/* Permission / Tenant Request field labels */
+.req-field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.req-select {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  background: var(--surface);
+}
+
+/* Status badges extended */
+.status-badge.amber { background: rgba(217,119,6,0.1); color: #b45309; }
+.status-badge.gray  { background: rgba(0,0,0,0.06); color: var(--ink-dim); }
+.status-badge.green { background: rgba(22,163,74,0.1); color: var(--green); }
+.status-badge.red   { background: rgba(212,0,31,0.1); color: var(--red); }
+
+/* Table val colors */
+.val.red   { color: var(--red); }
+.val.amber { color: #b45309; }
+
+/* Member search box inside member-picker */
+.member-picker .search-box {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 6px;
+  min-height: 34px;
+}
+.member-picker .search-box input {
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  flex: 1;
+  min-height: 30px;
+}
+.member-picker .search-box input:focus { outline: none; }
+
+/* Stat val color helpers already defined above via .val.red etc */

@@ -46,12 +46,35 @@ function LoginScreen({ users, onLoginSuccess, onAddAuditLog }) {
     const localUser = users.find((user) => user.uid === trimmedUid && user.pw === password);
     if (!localUser) return false;
 
+    if (localUser.status === 'revoked') {
+      setError('Your account has been revoked. Please contact your administrator.');
+      cycleAuditLine('rejected - account revoked');
+      onAddAuditLog('access_denied', `${trimmedUid} - account revoked`, 'rejected');
+      setIsVerifying(false);
+      return true;
+    }
+
     if (localUser.status === 'suspended') {
-      setError('Account has been suspended. Contact the administrator for further details.');
+      setError('Your account has been suspended. Please contact your administrator.');
       cycleAuditLine('rejected - account suspended');
       onAddAuditLog('access_denied', `${trimmedUid} - account suspended`, 'rejected');
       setIsVerifying(false);
       return true;
+    }
+
+    // Feature 5: Expired account check
+    if (localUser.expiryDate) {
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      const exp = new Date(localUser.expiryDate);
+      exp.setHours(0, 0, 0, 0);
+      if (exp < now) {
+        setError('Your account has expired. Please contact your administrator to renew your access.');
+        cycleAuditLine('rejected - account expired');
+        onAddAuditLog('access_denied', `${trimmedUid} - account expired`, 'rejected');
+        setIsVerifying(false);
+        return true;
+      }
     }
 
     localStorage.setItem('att_access_token', 'local-demo-token');
@@ -94,14 +117,36 @@ function LoginScreen({ users, onLoginSuccess, onAddAuditLog }) {
         return;
       }
 
-      // Check if user account is suspended in local state
+      // Feature 7: Revoked user check
       const localUser = users.find((user) => user.uid === trimmedUid);
-      if (localUser && localUser.status === 'suspended') {
-        setError('Account has been suspended. Contact the administrator for further details.');
+      if (localUser?.status === 'revoked') {
+        setError('Your account has been revoked. Please contact your administrator.');
+        cycleAuditLine('rejected - account revoked');
+        onAddAuditLog('access_denied', `${trimmedUid} - account revoked`, 'rejected');
+        setIsVerifying(false);
+        return;
+      }
+
+      // Feature 8: Suspended user check
+      if (localUser?.status === 'suspended') {
+        setError('Your account has been suspended. Please contact your administrator.');
         cycleAuditLine('rejected - account suspended');
         onAddAuditLog('access_denied', `${trimmedUid} - account suspended`, 'rejected');
         setIsVerifying(false);
         return;
+      }
+
+      // Feature 5: Expired account check
+      if (localUser?.expiryDate) {
+        const now = new Date(); now.setHours(0, 0, 0, 0);
+        const exp = new Date(localUser.expiryDate); exp.setHours(0, 0, 0, 0);
+        if (exp < now) {
+          setError('Your account has expired. Please contact your administrator to renew your access.');
+          cycleAuditLine('rejected - account expired');
+          onAddAuditLog('access_denied', `${trimmedUid} - account expired`, 'rejected');
+          setIsVerifying(false);
+          return;
+        }
       }
 
       const sequences = [

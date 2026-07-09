@@ -19,6 +19,7 @@ const getDefaultActiveDuration = () => {
 function Modal({ isOpen, onClose, onCreateUser, currentUser, projects }) {
   const [name, setName] = useState('');
   const [userId, setUserId] = useState('');
+  const [email, setEmail] = useState('');
   const [role, setRole] = useState('manager');
   const [password, setPassword] = useState('');
   const [selectedProjectIds, setSelectedProjectIds] = useState([]);
@@ -37,6 +38,7 @@ function Modal({ isOpen, onClose, onCreateUser, currentUser, projects }) {
     if (isOpen) {
       setName('');
       setUserId('');
+      setEmail('');
       setRole(roleOptions[0] || 'manager');
       setPassword(genRandomPassword());
       setSelectedProjectIds(projects[0] ? [projects[0].id] : []);
@@ -66,7 +68,8 @@ function Modal({ isOpen, onClose, onCreateUser, currentUser, projects }) {
       role,
       password,
       projectIds: selectedProjectIds,
-      activeDuration
+      activeDuration,
+      email: email.trim() || `${trimmedUid}@att.com`
     });
     setIsSaving(false);
     if (success) onClose();
@@ -96,7 +99,23 @@ function Modal({ isOpen, onClose, onCreateUser, currentUser, projects }) {
             type="text"
             placeholder="e.g. aps-0142"
             value={userId}
-            onChange={(event) => setUserId(event.target.value)}
+            onChange={(event) => {
+              setUserId(event.target.value);
+              // Auto-suggest email if user hasn't manually typed one
+              if (!email || email.endsWith('@att.com')) {
+                setEmail(`${event.target.value.trim()}@att.com`);
+              }
+            }}
+          />
+        </div>
+
+        <div className="field">
+          <label>Email Address</label>
+          <input
+            type="email"
+            placeholder={`e.g. ${userId || 'user'}@att.com`}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
           />
         </div>
 
